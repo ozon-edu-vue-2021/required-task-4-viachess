@@ -30,6 +30,7 @@
             </v-col>
             <v-col>
               <v-text-field
+                name="middleName"
                 label="Отчество"
                 outlined
                 :rules="onlyRussianChars"
@@ -49,6 +50,7 @@
               >
                 <template v-slot:activator="{ on, attrs }">
                   <v-text-field
+                    name="birthDate"
                     v-model="formData.birthDate"
                     label="Дата рождения"
                     placeholder="дд.мм.гг"
@@ -80,6 +82,7 @@
           <v-row>
             <v-col>
               <v-text-field
+                name="email"
                 label="Email"
                 type="email"
                 autocomplete="email"
@@ -91,7 +94,7 @@
           <v-row>
             <v-col>
               <p>Пол</p>
-              <v-radio-group v-model="formData.gender" mandatory>
+              <v-radio-group name="gender" v-model="formData.gender" mandatory>
                 <v-radio label="Мужской" value="male"></v-radio>
                 <v-radio label="Женский" value="female"></v-radio>
               </v-radio-group>
@@ -164,8 +167,13 @@ export default {
       console.log("VALIDATION RESULT", validationRes);
       if (validationRes) {
         console.log("Validation passed");
-        const formData = new FormData(this.$refs.form);
-        console.log(formData);
+        const formData = new FormData(this.$refs.form.$el);
+        const readyData = {};
+        for (const [key, value] of formData.entries()) {
+          readyData[key] = value;
+        }
+        console.log(readyData);
+        // sendReadyData(readyData);
       }
     },
   },

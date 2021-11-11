@@ -4,6 +4,7 @@
     <v-row>
       <v-col>
         <v-autocomplete
+          name="citizenship"
           solo
           :items="filteredNationalities"
           v-on:update:search-input="throttledDisplayFiltered"
@@ -19,23 +20,33 @@
     <template v-if="!isRussian">
       <v-row>
         <v-col>
-          <v-text-field label="Фамилия на латинице" :rules="latinCharsRule" />
+          <v-text-field
+            name="latinLastName"
+            label="Фамилия на латинице"
+            :rules="latinCharsRule"
+          />
         </v-col>
         <v-col>
-          <v-text-field label="Имя на латинице" :rules="latinCharsRule" />
+          <v-text-field
+            name="latinFirstName"
+            label="Имя на латинице"
+            :rules="latinCharsRule"
+          />
         </v-col>
       </v-row>
     </template>
     <v-row>
       <v-col>
         <v-text-field
+          name="passportNumber"
           label="Номер паспорта"
           :rules="passportNumberFieldRules"
         />
       </v-col>
-      <template v-if="!isRussian">
+      <template v-if="isRussian">
         <v-col>
           <v-text-field
+            name="passportSeries"
             label="Серия паспорта"
             :rules="passportSeriesFieldRules"
           />
@@ -51,6 +62,7 @@
           >
             <template v-slot:activator="{ on, attrs }">
               <v-text-field
+                name="passportIssueDate"
                 v-model="issueDate"
                 label="Дата выдачи"
                 placeholder="дд.мм.гг"
@@ -79,6 +91,7 @@
       <template v-else>
         <v-col>
           <v-select
+            name="passportIssueCountry"
             label="Страна выдачи"
             :items="issueCountries"
             v-model="issueCountry"
@@ -87,6 +100,7 @@
         </v-col>
         <v-col>
           <v-select
+            name="passportType"
             label="Тип паспорта"
             :items="passportTypes"
             v-model="passportType"
@@ -98,15 +112,16 @@
     <v-row>
       <v-col>
         <p>Меняли ли фамилию или имя?</p>
-        <v-radio-group mandatory @change="genderChangeEvent">
+        <v-radio-group name="nameChanged" mandatory @change="nameChangeEvent">
           <v-radio label="Нет" value="false"></v-radio>
           <v-radio label="Да" value="true"></v-radio>
         </v-radio-group>
       </v-col>
     </v-row>
-    <v-row v-if="genderChanged">
+    <v-row v-if="nameChanged">
       <v-col>
         <v-text-field
+          name="newLastName"
           label="Фамилия"
           outlined
           :rules="onlyRussianChars"
@@ -115,6 +130,7 @@
       </v-col>
       <v-col>
         <v-text-field
+          name="newFirstName"
           label="Имя"
           outlined
           :rules="onlyRussianChars"
@@ -128,6 +144,7 @@
 <script>
 import citizenships from "../assets/data/citizenships.json";
 import passportTypes from "../assets/data/passport-types.json";
+import throttle from "../utils/utils";
 import validator from "validator";
 import Fuse from "fuse.js";
 
@@ -153,7 +170,11 @@ export default {
         },
       ],
       passportSeriesFieldRules: [
-        (value) => !!value || "Обязательное поле",
+        (value) => {
+          if (value === undefined || value === null || value?.length === 0) {
+            return "Введите серию паспорта";
+          }
+        },
         (value) => {
           if (value !== undefined) {
             return value.length === 4 && !Number.isNaN(Number(value))
@@ -190,7 +211,7 @@ export default {
       issueDate: null,
       issueCountry: null,
       passportType: null,
-      genderChanged: false,
+      nameChanged: false,
       newFirstName: "",
       newLastName: "",
     };
@@ -199,18 +220,6 @@ export default {
     this.filteredNationalities = this.citizenshipNationalities;
   },
   methods: {
-    throttle(callback, limit) {
-      var waiting = false;
-      return function () {
-        if (!waiting) {
-          callback.apply(this, arguments);
-          waiting = true;
-          setTimeout(function () {
-            waiting = false;
-          }, limit);
-        }
-      };
-    },
     displayFiltered(inputVal) {
       if (inputVal === null || inputVal.length === 0) {
         this.filteredNationalities = this.citizenshipNationalities;
@@ -233,11 +242,11 @@ export default {
         this.isRussian = false;
       }
     },
-    genderChangeEvent(val) {
+    nameChangeEvent(val) {
       if (val === "false") {
-        this.genderChanged = false;
+        this.nameChanged = false;
       } else if (val === "true") {
-        this.genderChanged = true;
+        this.nameChanged = true;
       } else {
         return;
       }
@@ -251,7 +260,7 @@ export default {
       return citizenships.map((item) => item.nationality);
     },
     throttledDisplayFiltered: function () {
-      return this.throttle(this.displayFiltered, 200);
+      return throttle(this.displayFiltered, 200);
     },
     issueCountries: function () {
       return citizenships.map((item) => item.flag);
