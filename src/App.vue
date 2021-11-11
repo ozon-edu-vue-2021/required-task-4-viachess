@@ -1,17 +1,21 @@
 <template>
-  <div id="app">
-    <Form />
-  </div>
+  <v-app>
+    <v-main>
+      <Form />
+    </v-main>
+  </v-app>
 </template>
 
 <script>
-import Form from "./components/Form.vue";
-
+import Form from "./components/Form";
 export default {
   name: "App",
   components: {
     Form,
   },
+  data: () => ({
+    //
+  }),
 };
 </script>
 
